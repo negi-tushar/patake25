@@ -1,0 +1,44 @@
+<div class="container vh-100 d-flex justify-content-center align-items-center">
+  <div class="card p-4 shadow-sm" style="width: 100%; max-width: 450px;">
+    <div class="card-body">
+      <h3 class="card-title text-center mb-4">Admin Panel Login</h3>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Email Input -->
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input
+            type="email"
+            class="form-control form-control-lg"
+            id="email"
+            formControlName="email"
+            placeholder="name@example.com"
+          />
+        </div>
+
+        <!-- Password Input -->
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input
+            type="password"
+            class="form-control form-control-lg"
+            id="password"
+            formControlName="password"
+            placeholder="Enter your password"
+          />
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary btn-lg" [disabled]="loginForm.invalid">
+            Login
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
