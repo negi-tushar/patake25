@@ -1,0 +1,109 @@
+<div class="container-fluid p-3 p-md-4">
+  <h2 class="mb-4">Create Invoice</h2>
+
+  <div class="row g-4">
+    <!-- Left Column: Product Picker -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-header bg-white">
+          <input class="form-control" [formControl]="searchControl" placeholder="Search products..." />
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height: 75vh; overflow-y: auto;">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <tbody>
+                <tr *ngFor="let p of filteredProducts()" (click)="addLineFromProduct(p)" style="cursor: pointer;">
+                  <td>{{ p.name }}</td>
+                  <td class="text-end text-muted">Stock: {{ p.quantity }}</td>
+                  <td class="text-end">₹{{ p.sellPrice | number:'1.2-2' }}</td>
+                </tr>
+                <tr *ngIf="filteredProducts().length === 0">
+                  <td colspan="3" class="text-center p-4 text-muted">No products match your search.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Invoice Details -->
+    <div class="col-lg-6">
+      <!-- Cart Items -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <div *ngIf="lines().length === 0" class="text-center p-4 text-muted">No items in cart.</div>
+          <div *ngIf="lines().length > 0" class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="text-center">Qty</th>
+                  <th>Sell Price</th>
+                  <th>Margin %</th>
+                  <th class="text-end">Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of lines(); let i = index">
+                  <td>{{ l.name }}</td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-secondary" (click)="changeQty(i, -1)">-</button>
+                      <button class="btn btn-light" disabled>{{ l.qty }}</button>
+                      <button class="btn btn-outline-secondary" (click)="changeQty(i, 1)">+</button>
+                    </div>
+                  </td>
+                  <td><input type="number" class="form-control form-control-sm" [value]="l.sellPrice" (change)="updateSellPrice(i, $event)"></td>
+                  <td><input type="number" class="form-control form-control-sm" [value]="l.marginPercent" (change)="updateMargin(i, $event)"></td>
+                  <td class="text-end fw-bold">₹{{ (l.sellPrice * l.qty) | number:'1.2-2' }}</td>
+                  <td><button class="btn btn-sm btn-outline-danger" (click)="removeLine(i)">×</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Customer & Summary -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="mb-3"><input class="form-control" [formControl]="customerName" placeholder="Customer Name (defaults to 'John')"></div>
+          <hr>
+          <div class="row g-3 align-items-end">
+            <div class="col-6">
+              <label class="form-label">Discount Mode</label>
+              <select class="form-select" [value]="discountMode()" (change)="discountMode.set($any($event.target).value)">
+                <option value="flat">Flat (₹)</option>
+                <option value="percent">Percent (%)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Discount Value</label>
+              <input type="number" class="form-control" [value]="discountValue()" (change)="discountValue.set(+$any($event.target).value)">
+            </div>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between text-muted"><span>Subtotal:</span><span>₹{{ subTotal() | number:'1.2-2' }}</span></div>
+          <div class="d-flex justify-content-between text-muted"><span>Discount:</span><span>- ₹{{ discountAmount() | number:'1.2-2' }}</span></div>
+          <div class="d-flex justify-content-between h4 mt-2"><span>Grand Total:</span><span>₹{{ grandTotal() | number:'1.2-2' }}</span></div>
+          <hr>
+          <!-- <div class="d-flex justify-content-between text-success"><span>Profit:</span><span>₹{{ profitAfterDiscount() | number:'1.2-2' }}</span></div> -->
+          <div class="d-grid mt-4">
+            <button class="btn btn-primary btn-lg" (click)="saveInvoice()" [disabled]="saving() || lines().length === 0">
+              {{ saving() ? 'Saving...' : 'Save Invoice' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" *ngIf="toast()">
+    <div class="toast show align-items-center" [ngClass]="{'text-bg-success': toast()?.type === 'success', 'text-bg-danger': toast()?.type === 'error'}">
+      <div class="d-flex"><div class="toast-body">{{ toast()?.msg }}</div></div>
+    </div>
+  </div>
+</div>
