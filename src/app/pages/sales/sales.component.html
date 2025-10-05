@@ -43,6 +43,7 @@
                   Edit
                 </button>
                 <button
+                *ngIf="isAdmin()" 
                   class="btn btn-sm btn-outline-danger"
                   (click)="deleteInvoice(sale.id)"
                 >
@@ -102,6 +103,7 @@
             Edit
           </button>
           <button
+          *ngIf="isAdmin()" 
             class="btn btn-sm btn-outline-danger"
             (click)="deleteInvoice(sale.id)"
           >

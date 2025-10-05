@@ -128,9 +128,11 @@ async applyMargin(): Promise<void> {
     const updates = targets.map(p => {
       const cost = (p as any).costPrice ?? p.rate ?? 0; // fallback if migrating
       const newSell = this.round2(Number(cost) * (1 + percent / 100));
+              const roundedSellPrice = Math.round(newSell);
+
       return {
         id: p.id!,
-        sellPrice: newSell,
+        sellPrice: roundedSellPrice,
         marginPercent: percent
       };
     });

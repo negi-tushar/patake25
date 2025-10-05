@@ -10,6 +10,7 @@ import { InvoiceService, SaveInvoicePayload } from '../../services/invoice.servi
 import { ActivatedRoute, Router } from '@angular/router';
 
 type DiscountMode = 'flat' | 'percent';
+declare var bootstrap: any;
 
 // Represents a single line item in the invoice cart
 interface CartLine {
@@ -44,6 +45,8 @@ export class NewInvoiceComponent implements OnInit {
   filteredProducts = signal<Product[]>([]);
   searchControl = this.fb.control('', { nonNullable: true });
   
+    private previewModal: any;
+
   // --- State for Edit Mode ---
   editMode = signal(false);
   editingInvoiceId: string | null = null;
@@ -88,6 +91,25 @@ export class NewInvoiceComponent implements OnInit {
      // If in edit mode, load the invoice and pre-fill the form
     if (this.editMode()) {
       await this.loadInvoiceForEditing(this.editingInvoiceId!);
+    }
+        this.previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+
+  }
+
+  openPreviewModal(): void {
+    if (this.lines().length === 0) {
+      this.showToast('Cart is empty. Add items to preview.', 'error');
+      return;
+    }
+    this.previewModal.show();
+  }
+
+  // --- NEW: Method to save from within the modal ---
+  async saveFromPreview(): Promise<void> {
+    // This method simply calls your existing saveInvoice logic
+    await this.saveInvoice(); 
+    if (!this.saving()) { // Only hide if save was successful
+        this.previewModal.hide();
     }
   }
 

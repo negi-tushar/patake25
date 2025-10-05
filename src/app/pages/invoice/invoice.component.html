@@ -13,6 +13,7 @@
             placeholder="Search products..."
           />
         </div>
+          <div class="d-flex justify-content-between text-info"><span>My:</span> <span>&#8377;{{ profitAfterDiscount() | number:'1.2-2' }}</span></div>
 
         <!-- Desktop Table -->
         <div class="card-body p-0 d-none d-md-block">
@@ -238,10 +239,17 @@
           </div>
 
           <hr />
-          <div class="d-flex justify-content-between text-success">
+          <!-- <div class="d-flex justify-content-between text-success">
             <span>Profit:</span>
             <span>₹{{ profitAfterDiscount() | number: '1.2-2' }}</span>
-          </div>
+          </div> -->
+           <button 
+        type="button" 
+        class="btn btn-outline-secondary" 
+        (click)="openPreviewModal()"
+        [disabled]="lines().length === 0">
+        Preview
+      </button>
 
           <div class="d-grid mt-4">
             <button
@@ -271,6 +279,60 @@
     >
       <div class="d-flex">
         <div class="toast-body">{{ toast()?.msg }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- NEW: Add this entire modal block at the bottom of your file -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalLabel">Invoice Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Customer and Totals -->
+        <div class="mb-4">
+          <h6><strong>Customer:</strong> {{ customerName.value || 'John' }}</h6>
+          <hr>
+        
+        </div>
+
+        <!-- Items Table -->
+        <table class="table table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>Item</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Price</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of lines()">
+              <td>{{ l.name }}</td>
+              <td class="text-center">{{ l.qty }}</td>
+              <td class="text-end">&#8377;{{ l.sellPrice | number:'1.2-2' }}</td>
+              <td class="text-end fw-bold">&#8377;{{ (l.sellPrice * l.qty) | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+          <div class="d-flex justify-content-between"><span>Subtotal:</span> <span>&#8377;{{ subTotal() | number:'1.2-2' }}</span></div>
+          <div class="d-flex justify-content-between"><span>Discount:</span> <span class="text-warning">- &#8377;{{ discountAmount() | number:'1.2-2' }}</span></div>
+          <div class="d-flex justify-content-between fw-bold h5 mt-2"><span>Grand Total:</span> <span>&#8377;{{ grandTotal() | number:'1.2-2' }}</span></div>
+          <!-- <div class="d-flex justify-content-between text-success"><span>Profit:</span> <span>&#8377;{{ profitAfterDiscount() | number:'1.2-2' }}</span></div> -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="saveFromPreview()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Saving...' : 'Confirm & Save' }}
+        </button>
       </div>
     </div>
   </div>

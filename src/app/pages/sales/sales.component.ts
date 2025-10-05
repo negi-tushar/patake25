@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 import { Invoice, InvoiceService } from '../../services/invoice.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sales',
@@ -14,13 +15,19 @@ import { Invoice, InvoiceService } from '../../services/invoice.service';
   templateUrl: './sales.component.html',
 })
 export class SalesComponent implements OnInit {
+    private authService = inject(AuthService); 
+
   private invoiceService = inject(InvoiceService);
   private router = inject(Router);
 
   sales$: Observable<Invoice[]> | undefined;
+  public isAdmin = signal(false);
 
   ngOnInit(): void {
     this.sales$ = this.invoiceService.getInvoices();
+     this.authService.isAdmin().subscribe(isUserAdmin => {
+      this.isAdmin.set(isUserAdmin);
+    });
   }
 
   navigateToCreateInvoice(): void {
