@@ -16,6 +16,7 @@ import {
   doc,
 } from '@angular/fire/firestore';
 import { BehaviorSubject } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 declare var bootstrap: any; // For Bootstrap modal control
 
@@ -39,12 +40,15 @@ export enum CrackerCategory {
 })
 export class ProductsComponent implements OnInit {
   private productsService = inject(ProductsService);
+      private authService = inject(AuthService); 
+
   private firestore = inject(Firestore);
   private fb = inject(FormBuilder);
   private productsRef = collection(this.firestore, 'products');
   private productsSubject = new BehaviorSubject<Product[]>([]);
 public crackerCategories = Object.values(CrackerCategory);
 
+  public isAdmin = signal(false);
 
 bulkMarginPercent: number = Number(localStorage.getItem('bulk_margin') ?? 20);
 bulkScope: 'selected' | 'all' = 'selected';
@@ -69,6 +73,9 @@ bulkScope: 'selected' | 'all' = 'selected';
   toastType = signal<'success' | 'error'>('success');
 
   async ngOnInit(): Promise<void> {
+       this.authService.isAdmin().subscribe(isUserAdmin => {
+      this.isAdmin.set(isUserAdmin);
+    });
     // 1) Try local first
     const cached = this.productsService.readFromLocal();
     if (cached.length > 0) {
