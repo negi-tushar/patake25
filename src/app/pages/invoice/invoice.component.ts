@@ -122,6 +122,7 @@ export class NewInvoiceComponent implements OnInit {
 
   // --- Cart Management Methods ---
   addLineFromProduct(p: Product): void {
+    console.log('Adding product to cart:', p);
     const existingIndex = this.lines().findIndex(l => l.productId === p.id);
     
     if (existingIndex > -1) {

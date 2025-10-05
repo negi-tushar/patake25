@@ -1,0 +1,51 @@
+/* --- GENERAL MOBILE IMPROVEMENTS --- */
+@media (max-width: 767.98px) {
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  .sale-card {
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .sale-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Floating Create Invoice Button */
+  .fab-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    z-index: 20;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+
+  /* Smooth scroll for mobile */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* --- DESKTOP SCROLL AREA --- */
+.table-responsive {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.table thead.sticky-top {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 5;
+}

@@ -19,6 +19,18 @@ import { BehaviorSubject } from 'rxjs';
 
 declare var bootstrap: any; // For Bootstrap modal control
 
+export enum CrackerCategory {
+  AerialShots      = "Aerial Shots / Sky Shots",
+  SoundingCrackers = "Sounding Crackers / Bombs",
+  Fountains        = "Fountains / Flower Pots",
+  GroundSpinners   = "Ground Spinners / Chakkars",
+  Rockets          = "Rockets",
+  Sparklers        = "Sparklers",
+  KidsCollection   = "Kids' Collection / Novelty",
+  GiftPacks        = "Gift Packs / Assortments",
+  Other            = "Other"
+}
+
 @Component({
   selector: 'app-products',
   standalone: true,
@@ -31,6 +43,7 @@ export class ProductsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private productsRef = collection(this.firestore, 'products');
   private productsSubject = new BehaviorSubject<Product[]>([]);
+public crackerCategories = Object.values(CrackerCategory);
 
 
 bulkMarginPercent: number = Number(localStorage.getItem('bulk_margin') ?? 20);
@@ -40,6 +53,7 @@ bulkScope: 'selected' | 'all' = 'selected';
   productForm = this.fb.group({
     id: [''],
     name: ['', Validators.required],
+     category: [CrackerCategory.Other, Validators.required], 
     quantity: [0, [Validators.required, Validators.min(0)]],
     unit: ['box', Validators.required],
     rate: [0, [Validators.required, Validators.min(0)]],
@@ -170,6 +184,8 @@ async applyMargin(): Promise<void> {
       this.productForm.setValue({
         id: product.id || '',
         name: product.name,
+                category: product.category || CrackerCategory.Other, // Set category value
+
         quantity: product.quantity,
         unit: product.unit,
         rate: product.rate??0,
@@ -181,6 +197,8 @@ async applyMargin(): Promise<void> {
         name: '',
         quantity: 0,
         unit: 'box',
+                category: CrackerCategory.Other, // Reset to default
+
         rate: 0,
         amount: 0,
       });
@@ -193,6 +211,8 @@ async applyMargin(): Promise<void> {
     const formData = this.productForm.getRawValue();
     const productData: Partial<Product> = {
       name: formData.name ?? '',
+            category: formData.category ?? CrackerCategory.Other, // Add category
+
       quantity: formData.quantity ?? 0,
       unit: formData.unit ?? 'box',
       rate: formData.rate ?? 0,

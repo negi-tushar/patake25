@@ -33,7 +33,7 @@ export class LoginComponent {
     this.errorMessage = null;
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
-        this.router.navigate(['/dashboard']); // Redirect on success
+        this.router.navigate(['/invoice']); // Redirect on success
       },
       error: (err) => {
         // Handle different Firebase auth errors

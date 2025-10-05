@@ -33,6 +33,7 @@ export class DashboardComponent implements OnInit {
   // --- State Signals ---
    invoices = signal<Invoice[]>([]);
   public isLoading = signal(true); // Add a loading state for better UX
+  public dateFilter = signal<'today' | 'last10days'>('last10days'); // Add signal for the filter
 
   // --- KPI Signals (Computed from raw data) ---
   totalSales = computed(() => this.invoices().reduce((sum, inv) => sum + (inv.grandTotal ?? 0), 0));
@@ -80,7 +81,7 @@ export class DashboardComponent implements OnInit {
       console.log('Valid Invoices after filtering VOIDED:', invoice);
       
       // 3. Update the chart's data
-      this.updateChartData(invoice);
+      this.updateChartData();
 
       // 4. Manually trigger the chart to redraw itself
       this.chart?.update();
@@ -89,25 +90,61 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private updateChartData(invoices: Invoice[]): void {
-    if (invoices.length === 0) return;
+    onDateFilterChange(event: Event): void {
+    const selectedValue = (event.target as HTMLSelectElement).value as 'today' | 'last10days';
+    this.dateFilter.set(selectedValue);
+    this.updateChartData(); // Re-run the chart calculation
+  }
 
-    const salesByDate = new Map<string, { sales: number; profit: number }>();
-    for (const invoice of invoices) {
-      // Make sure createdAt and its toDate method exist
-      if (invoice.createdAt?.toDate) {
-        const date = invoice.createdAt.toDate().toLocaleDateString();
-        const existing = salesByDate.get(date) ?? { sales: 0, profit: 0 };
-        existing.sales += invoice.grandTotal ?? 0;
-        existing.profit += invoice.profitTotalAfterDiscount ?? 0;
-        salesByDate.set(date, existing);
+  private updateChartData(): void {
+    const filter = this.dateFilter();
+    const invoices = this.invoices();
+    const now = new Date();
+
+    if (filter === 'today') {
+      // --- Aggregate data by the HOUR for today ---
+      const hourlyData = new Map<number, { sales: number, profit: number }>();
+      for (let i = 0; i < 24; i++) {
+        hourlyData.set(i, { sales: 0, profit: 0 }); // Initialize all 24 hours
       }
+
+      const todayInvoices = invoices.filter(inv => inv.createdAt.toDate().toDateString() === now.toDateString());
+
+      for (const invoice of todayInvoices) {
+        const hour = invoice.createdAt.toDate().getHours();
+        const hourData = hourlyData.get(hour)!;
+        hourData.sales += invoice.grandTotal;
+        hourData.profit += invoice.profitTotalAfterDiscount;
+      }
+      
+      this.lineChartData.labels = Array.from(hourlyData.keys()).map(h => `${h}:00`);
+      this.lineChartData.datasets[0].data = Array.from(hourlyData.values()).map(d => d.sales);
+      this.lineChartData.datasets[1].data = Array.from(hourlyData.values()).map(d => d.profit);
+
+    } else { // 'last10days'
+      // --- Aggregate data by the DAY for the last 10 days ---
+      const dailyData = new Map<string, { sales: number, profit: number }>();
+      for (let i = 9; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(now.getDate() - i);
+        dailyData.set(date.toLocaleDateString(), { sales: 0, profit: 0 }); // Initialize last 10 days
+      }
+
+      for (const invoice of invoices) {
+        const dateStr = invoice.createdAt.toDate().toLocaleDateString();
+        if (dailyData.has(dateStr)) {
+          const dayData = dailyData.get(dateStr)!;
+          dayData.sales += invoice.grandTotal;
+          dayData.profit += invoice.profitTotalAfterDiscount;
+        }
+      }
+
+      this.lineChartData.labels = Array.from(dailyData.keys());
+      this.lineChartData.datasets[0].data = Array.from(dailyData.values()).map(d => d.sales);
+      this.lineChartData.datasets[1].data = Array.from(dailyData.values()).map(d => d.profit);
     }
-
-    const sortedDates = [...salesByDate.keys()].sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-    this.lineChartData.labels = sortedDates;
-    this.lineChartData.datasets[0].data = sortedDates.map(date => salesByDate.get(date)!.sales);
-    this.lineChartData.datasets[1].data = sortedDates.map(date => salesByDate.get(date)!.profit);
+    
+    // Manually trigger the chart to redraw with the new data
+    this.chart?.update();
   }
 }

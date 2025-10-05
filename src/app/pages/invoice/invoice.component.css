@@ -1,0 +1,38 @@
+/* --- GENERAL MOBILE TWEAKS --- */
+@media (max-width: 767.98px) {
+  .card-body {
+    padding: 0.75rem 1rem;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.9rem;
+  }
+
+  .h4 {
+    font-size: 1.1rem;
+  }
+
+  /* Smooth scrolling inside product list */
+  .product-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Sticky invoice summary at bottom */
+  .summary-card {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    background: white;
+    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.1);
+  }
+}

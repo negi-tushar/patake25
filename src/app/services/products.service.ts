@@ -12,6 +12,7 @@ import {
   Query,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { CrackerCategory } from '../pages/products/products.component';
 export interface Product {
   id?: string;
 
@@ -19,7 +20,7 @@ export interface Product {
   name: string;
   quantity: number;
   unit: string;
-
+ category: CrackerCategory; 
   // Pricing
   // costPrice: what you pay (source of truth for margins)
   costPrice: number;
