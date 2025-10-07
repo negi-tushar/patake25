@@ -31,7 +31,7 @@ interface InvoiceItem {
 
 // This is the main payload that the component will send to the service to be saved.
 export interface SaveInvoicePayload {
-  customer: { name: string };
+  customer: { name: string,   phone?: string; };
   items: InvoiceItem[];
   subTotal: number;
   discount: { mode: 'flat' | 'percent'; value: number };

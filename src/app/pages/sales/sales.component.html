@@ -1,10 +1,19 @@
 <div class="container-fluid p-3 p-md-4">
   <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <h2 class="mb-0">Sales Records</h2>
-    <button class="btn btn-primary d-none d-md-block" (click)="navigateToCreateInvoice()">
-      + Create New Invoice
-    </button>
+    <div class="d-flex align-items-center gap-3 w-100 w-md-auto">
+      <!-- NEW: Search Input -->
+      <!-- <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search by customer..." 
+        [formControl]="searchControl"
+      > -->
+      <button class="btn btn-primary d-none d-md-block" (click)="navigateToCreateInvoice()">
+        + Create New Invoice
+      </button>
+    </div>
   </div>
 
   <!-- Desktop Table -->
@@ -16,9 +25,9 @@
             <tr>
               <th>Date</th>
               <th>Customer</th>
-              <th class="text-end">Total (₹)</th>
-              <th class="text-end">Discount (₹)</th>
-              <th class="text-end">Profit (₹)</th>
+              <th class="text-end">Total (&#8377;)</th>
+              <th class="text-end">Discount (&#8377;)</th>
+              <th class="text-end">Profit (&#8377;)</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -26,36 +35,21 @@
             <tr *ngFor="let sale of sales$ | async">
               <td>{{ sale.createdAt.toDate() | date: 'medium' }}</td>
               <td>{{ sale.customer.name }}</td>
-              <td class="text-end fw-bold">₹{{ sale.grandTotal | number: '1.2-2' }}</td>
-              <td class="text-end text-warning">₹{{ sale.discountAmount | number: '1.2-2' }}</td>
-              <td class="text-end text-success">₹{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</td>
+              <td class="text-end fw-bold">&#8377;{{ sale.grandTotal | number: '1.2-2' }}</td>
+              <td class="text-end text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</td>
+              <td class="text-end text-success">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</td>
               <td class="text-center">
-                <button
-                  class="btn btn-sm btn-outline-secondary me-2"
-                  (click)="downloadInvoice(sale)"
-                >
-                  Download
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-primary me-2"
-                  (click)="editInvoice(sale.id)"
-                >
-                  Edit
-                </button>
-                <button
-                *ngIf="isAdmin()" 
-                  class="btn btn-sm btn-outline-danger"
-                  (click)="deleteInvoice(sale.id)"
-                >
-                  Delete
-                </button>
+                <!-- UPDATED: Added WhatsApp Send Button -->
+                <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success me-2" (click)="sendWhatsAppBill(sale)" title="Send via WhatsApp">Send</button>
+                <button class="btn btn-sm btn-outline-secondary me-2" (click)="downloadInvoice(sale)">Download</button>
+                <button class="btn btn-sm btn-outline-primary me-2" (click)="editInvoice(sale.id)">Edit</button>
+                <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger" (click)="deleteInvoice(sale.id)">Delete</button>
               </td>
             </tr>
-
             <!-- Empty State -->
             <tr *ngIf="!(sales$ | async)?.length">
               <td colspan="6" class="text-center p-5 text-muted">
-                No sales recorded yet.
+                No sales recorded or found.
               </td>
             </tr>
           </tbody>
@@ -67,65 +61,42 @@
   <!-- Mobile Card List -->
   <div class="d-block d-md-none">
     <div *ngIf="(sales$ | async)?.length; else emptyMobile">
-      <div
-        *ngFor="let sale of sales$ | async"
-        class="sale-card border rounded shadow-sm p-3 mb-3"
-      >
+      <div *ngFor="let sale of sales$ | async" class="sale-card border rounded shadow-sm p-3 mb-3">
         <div class="d-flex justify-content-between mb-1">
           <strong>{{ sale.customer.name }}</strong>
           <small class="text-muted">{{ sale.createdAt.toDate() | date: 'short' }}</small>
         </div>
-
         <div class="d-flex justify-content-between small text-muted mb-2">
           <span>Total:</span>
-          <span class="fw-bold text-dark">₹{{ sale.grandTotal | number: '1.2-2' }}</span>
+          <span class="fw-bold text-dark">&#8377;{{ sale.grandTotal | number: '1.2-2' }}</span>
         </div>
         <div class="d-flex justify-content-between small mb-1">
           <span class="text-warning">Discount:</span>
-          <span class="text-warning">₹{{ sale.discountAmount | number: '1.2-2' }}</span>
+          <span class="text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</span>
         </div>
         <div class="d-flex justify-content-between small mb-3">
           <span class="text-success">Profit:</span>
-          <span class="text-success fw-bold">₹{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</span>
+          <span class="text-success fw-bold">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</span>
         </div>
-
         <div class="d-flex justify-content-end gap-2">
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            (click)="downloadInvoice(sale)"
-          >
-            Download
-          </button>
-          <button
-            class="btn btn-sm btn-outline-primary"
-            (click)="editInvoice(sale.id)"
-          >
-            Edit
-          </button>
-          <button
-          *ngIf="isAdmin()" 
-            class="btn btn-sm btn-outline-danger"
-            (click)="deleteInvoice(sale.id)"
-          >
-            Delete
-          </button>
+          <!-- UPDATED: Added WhatsApp Send Button -->
+          <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success" (click)="sendWhatsAppBill(sale)">Send</button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="downloadInvoice(sale)">Download</button>
+          <button class="btn btn-sm btn-outline-primary" (click)="editInvoice(sale.id)">Edit</button>
+          <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger" (click)="deleteInvoice(sale.id)">Delete</button>
         </div>
       </div>
     </div>
-
     <!-- Empty Mobile State -->
     <ng-template #emptyMobile>
       <div class="text-center text-muted py-5">
-        No sales recorded yet.
+        No sales recorded or found.
       </div>
     </ng-template>
   </div>
 
   <!-- Floating Button (Mobile) -->
-  <button
-    class="btn btn-primary fab-btn d-md-none"
-    (click)="navigateToCreateInvoice()"
-  >
+  <button class="btn btn-primary fab-btn d-md-none" (click)="navigateToCreateInvoice()">
     + Create Invoice
   </button>
 </div>

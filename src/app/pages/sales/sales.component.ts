@@ -89,4 +89,35 @@ export class SalesComponent implements OnInit {
     const fileName = `Invoice-${invoice.customer.name.replace(' ', '_')}-${invoice.id.substring(0, 5)}.pdf`;
     doc.save(fileName);
   }
+
+    sendWhatsAppBill(sale: Invoice): void {
+    if (!sale.customer.phone) {
+      alert('No phone number is available for this customer.');
+      return;
+    }
+
+    // 1. Format the bill into a plain text message
+    // Note: %0A is the code for a line break in a URL
+    let message = `*Invoice for ${sale.customer.name}*\n\n`;
+    message += `Here is your bill summary:\n\n`;
+    message += `*Items:*\n`;
+
+    sale.items.forEach(item => {
+      const total = (item.finalSellPricePerUnit * item.qty).toFixed(2);
+      message += `- ${item.name} (${item.qty} x ${item.finalSellPricePerUnit}) = *${total}*\n`;
+    });
+
+    message += `\n-----------------------\n`;
+    message += `Subtotal: ${sale.subTotal.toFixed(2)}\n`;
+    message += `Discount: -${sale.discountAmount.toFixed(2)}\n`;
+    message += `*Grand Total: ${sale.grandTotal.toFixed(2)}*\n\n`;
+    message += `Thank you for your purchase!`;
+
+    // 2. Sanitize the phone number (remove spaces, +, etc.) and create the URL
+    const phoneNumber = sale.customer.phone.replace(/\D/g, '');
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // 3. Open the URL in a new tab
+    window.open(whatsappUrl, '_blank');
+  }
 }

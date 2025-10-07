@@ -199,6 +199,14 @@
               placeholder="Customer Name (defaults to 'John')"
             />
           </div>
+          <div class="mb-3">
+            <input
+              type="tel"
+              class="form-control"
+              [formControl]="customerPhone"
+              placeholder="Customer Phone (optional)"
+            />
+          </div>
 
           <hr />
           <div class="row g-3 align-items-end">
@@ -293,10 +301,22 @@
       </div>
       <div class="modal-body">
         <!-- Customer and Totals -->
-        <div class="mb-4">
-          <h6><strong>Customer:</strong> {{ customerName.value || 'John' }}</h6>
-          <hr>
-        
+       <div class="row g-2 mb-3">
+          <div class="col-sm-6">
+            <input
+              class="form-control"
+              [formControl]="customerName"
+              placeholder="Customer Name"
+            />
+          </div>
+          <div class="col-sm-6">
+            <input
+              type="tel"
+              class="form-control"
+              [formControl]="customerPhone"
+              placeholder="Customer Phone (optional)"
+            />
+          </div>
         </div>
 
         <!-- Items Table -->

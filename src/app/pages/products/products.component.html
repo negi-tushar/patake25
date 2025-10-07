@@ -55,8 +55,8 @@
             <td class="text-end">
               {{
               (
-              ((product.sellPrice || 0) - (product.costPrice ?? product.rate || 0))
-              / (product.costPrice ?? product.rate || 1)
+              ((product.sellPrice || 0) - ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
+              / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
               * 100
               ) | number:'1.0-2'
               }}
@@ -95,8 +95,8 @@
             <div class="col-6"><strong>Margin:</strong>
               {{
               (
-              ((product.sellPrice || 0) - (product.costPrice ?? product.rate || 0))
-              / (product.costPrice ?? product.rate || 1)
+              ((product.sellPrice || 0) - ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
+              / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
               * 100
               ) | number:'1.0-2'
               }}%

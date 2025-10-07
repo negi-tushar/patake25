@@ -53,6 +53,8 @@ export class NewInvoiceComponent implements OnInit {
 
   // --- State for Invoice Details ---
   customerName = this.fb.control('', { nonNullable: true });
+    customerPhone = this.fb.control(''); // Add form control for phone number
+
   lines = signal<CartLine[]>([]);
   discountMode = signal<DiscountMode>('flat');
   discountValue = signal(0);
@@ -120,6 +122,8 @@ export class NewInvoiceComponent implements OnInit {
       
       // Pre-fill form state
       this.customerName.setValue(invoice.customer.name);
+            this.customerPhone.setValue(invoice.customer.phone || ''); 
+
       this.discountMode.set(invoice.discount.mode);
       this.discountValue.set(invoice.discount.value);
       
@@ -221,7 +225,7 @@ export class NewInvoiceComponent implements OnInit {
 
       // Prepare the final invoice payload
       const payload: SaveInvoicePayload = {
-        customer: { name: this.customerName.value?.trim() || 'John' },
+        customer: { name: this.customerName.value?.trim() || 'John',phone: this.customerPhone.value?.trim() || '' },
         items: this.lines().map(l => ({
           productId: l.productId,
           name: l.name,
@@ -267,6 +271,8 @@ export class NewInvoiceComponent implements OnInit {
     private resetForm(): void {
     this.lines.set([]);
     this.customerName.reset();
+        this.customerPhone.reset(); // Reset the phone number field
+
     this.discountValue.set(0);
     this.editMode.set(false);
     this.editingInvoiceId = null;
