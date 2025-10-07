@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { Chart, ChartConfiguration, ChartOptions, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale } from 'chart.js';
+import { Chart, ChartConfiguration, ChartOptions, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, DoughnutController, ArcElement } from 'chart.js';
 import { firstValueFrom } from 'rxjs';
 
 import { Invoice, InvoiceService } from '../../services/invoice.service';
@@ -20,7 +20,10 @@ export class DashboardComponent implements OnInit {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   constructor() {
-    Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale);
+    Chart.register(
+      LineController, LineElement, PointElement, LinearScale, Title, CategoryScale,
+      DoughnutController, ArcElement
+    );
   }
 
   // --- RAW DATA SIGNALS ---
@@ -77,6 +80,54 @@ export class DashboardComponent implements OnInit {
     if (itemCounts.size === 0) return null;
     return [...itemCounts.values()].sort((a, b) => b.count - a.count)[0];
   });
+
+   stockByCategory = computed(() => {
+    const categoryMap = new Map<string, number>();
+    for (const product of this.allProducts()) {
+      const category = product.category || 'Uncategorized';
+      const value = (product.rate ?? product.costPrice ?? 0) * product.quantity;
+      categoryMap.set(category, (categoryMap.get(category) || 0) + value);
+    }
+    // Sort by value, descending
+    return Array.from(categoryMap.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  });
+
+  // --- NEW: Chart configuration for the doughnut chart ---
+  public get doughnutChartData(): ChartConfiguration<'doughnut'>['data'] {
+    return {
+      labels: this.stockByCategory().map(c => c.name),
+      datasets: [{
+        data: this.stockByCategory().map(c => c.value),
+        backgroundColor: [
+          '#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899',
+          '#F59E0B', '#14B8A6', '#6366F1', '#D946EF', '#0EA5E9'
+        ],
+        hoverBackgroundColor: [
+          '#2563EB', '#059669', '#EA580C', '#7C3AED', '#DB2777',
+          '#D97706', '#0D9488', '#4F46E5', '#C026D3', '#0284C7'
+        ],
+        borderWidth: 1,
+      }]
+    };
+  }
+  public doughnutChartOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true, // This is the key change to show the legend
+        position: 'bottom', // Position the legend to the right of the chart
+        labels: {
+          boxWidth: 12, // Make the color boxes smaller
+          padding: 20,    // Add some space between legend items
+        }
+      },
+    }
+  };
+
+
 
   // --- CHART CONFIG ---
   public lineChartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };

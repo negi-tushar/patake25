@@ -2,19 +2,40 @@
   <!-- Header with actions -->
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <h2 class="mb-0">Manage Products</h2>
-    <div class="d-flex flex-wrap gap-2">
-      <button class="btn btn-primary" (click)="openProductModal()">+ Add Product</button>
-      <label class="btn btn-outline-secondary mb-0">
-        Import CSV
-        <input type="file" accept=".csv" (change)="onCsvSelected($event)" hidden />
-      </label>
-      <button *ngIf="isAdmin()" class="btn btn-outline-danger" [disabled]="selectedProductIds.size === 0"
-        (click)="deleteSelected()">
-        Delete Selected ({{ selectedProductIds.size }})
-      </button>
-      <button class="btn btn-outline-secondary" (click)="refreshFromServer()">Refresh</button>
-    </div>
+    
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <!-- Search Bar -->
+  <div class="flex-grow-1">
+    <input 
+      type="text" 
+      class="form-control" 
+      placeholder="Search by product name..." 
+      [formControl]="searchControl"
+    />
   </div>
+
+  <!-- Action Buttons -->
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-primary" (click)="openProductModal()">+ Add Product</button>
+
+    <label class="btn btn-outline-secondary mb-0">
+      Import CSV
+      <input type="file" accept=".csv" (change)="onCsvSelected($event)" hidden />
+    </label>
+
+    <button 
+      *ngIf="isAdmin()" 
+      class="btn btn-outline-danger" 
+      [disabled]="selectedProductIds.size === 0"
+      (click)="deleteSelected()"
+    >
+      Delete Selected ({{ selectedProductIds.size }})
+    </button>
+
+    <button class="btn btn-outline-secondary" (click)="refreshFromServer()">Refresh</button>
+  </div>
+</div>
+
 
   <!-- Table wrapper -->
   <div class="table-responsive d-none d-md-block">
@@ -31,7 +52,6 @@
           <th>Unit</th>
           <th class="text-end">Rate (₹)</th>
           <th class="text-end">Amount (₹)</th>
-          <!-- <th class="text-end">Cost (₹)</th> -->
           <th class="text-end">Sell (₹)</th>
           <th class="text-end">Margin (%)</th>
           <th class="text-center">Actions</th>
@@ -39,7 +59,8 @@
       </thead>
       <tbody>
         <ng-container *ngIf="products$ | async as products">
-          <tr *ngFor="let product of products">
+          <tr *ngFor="let product of products"
+              [ngClass]="{'table-danger': product.quantity === 0}">
             <td>
               <input type="checkbox" class="form-check-input" [checked]="selectedProductIds.has(product.id!)"
                 (change)="onProductSelect(product.id!, $event)" />
@@ -50,14 +71,14 @@
             <td>{{ product.unit }}</td>
             <td class="text-end">{{ product.rate | number:'1.2-2' }}</td>
             <td class="text-end">{{ product.amount | number:'1.2-2' }}</td>
-            <!-- <td class="text-end">{{ product.costPrice | number:'1.2-2' }}</td> -->
             <td class="text-end">{{ product.sellPrice | number:'1.2-2' }}</td>
             <td class="text-end">
               {{
               (
-              ((product.sellPrice || 0) - ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
-              / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
-              * 100
+                ((product.sellPrice || 0) -
+                ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
+                / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
+                * 100
               ) | number:'1.0-2'
               }}
             </td>
@@ -78,11 +99,17 @@
   <!-- Mobile Card View -->
   <div class="d-block d-md-none">
     <ng-container *ngIf="products$ | async as products">
-      <div *ngFor="let product of products" class="card mb-3 shadow-sm border-0">
+      <div *ngFor="let product of products"
+           class="card mb-3 shadow-sm border-0"
+           [ngClass]="{'bg-danger bg-opacity-10 border-danger': product.quantity === 0}">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
-            <h5 class="card-title mb-1">{{ product.name }}</h5>
-            <input type="checkbox" class="form-check-input" [checked]="selectedProductIds.has(product.id!)"
+            <h5 class="card-title mb-1">
+              {{ product.name }}
+              <span *ngIf="product.quantity === 0" class="badge bg-danger ms-2">Out of Stock</span>
+            </h5>
+            <input type="checkbox" class="form-check-input"
+              [checked]="selectedProductIds.has(product.id!)"
               (change)="onProductSelect(product.id!, $event)" />
           </div>
           <p class="text-muted small mb-2">{{ product.category }}</p>
@@ -90,14 +117,14 @@
             <div class="col-6"><strong>Qty:</strong> {{ product.quantity }} {{ product.unit }}</div>
             <div class="col-6"><strong>Rate:</strong> ₹{{ product.rate | number:'1.2-2' }}</div>
             <div class="col-6"><strong>Amount:</strong> ₹{{ product.amount | number:'1.2-2' }}</div>
-            <!-- <div class="col-6"><strong>Cost:</strong> ₹{{ product.costPrice | number:'1.2-2' }}</div> -->
             <div class="col-6"><strong>Sell:</strong> ₹{{ product.sellPrice | number:'1.2-2' }}</div>
             <div class="col-6"><strong>Margin:</strong>
               {{
               (
-              ((product.sellPrice || 0) - ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
-              / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
-              * 100
+                ((product.sellPrice || 0) -
+                ((product.costPrice !== undefined ? product.costPrice : product.rate) || 0))
+                / (((product.costPrice !== undefined ? product.costPrice : product.rate) || 1))
+                * 100
               ) | number:'1.0-2'
               }}%
             </div>
@@ -163,7 +190,7 @@
             </div>
             <div class="col-6">
               <label class="form-label">Amount (₹)</label>
-              <input type="number" class="form-control bg-light" formControlName="amount" readonly />
+              <input type="number" class="form-control bg-light" formControlName="amount"  />
               <small class="text-muted">Auto-calculated</small>
             </div>
           </div>

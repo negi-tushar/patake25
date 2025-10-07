@@ -3,13 +3,19 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <h2 class="mb-0">Sales Records</h2>
     <div class="d-flex align-items-center gap-3 w-100 w-md-auto">
-      <!-- NEW: Search Input -->
+      <!-- Search Input -->
       <!-- <input 
         type="text" 
         class="form-control" 
         placeholder="Search by customer..." 
         [formControl]="searchControl"
       > -->
+      
+      <!-- Toggle Profit Button -->
+      <button class="btn btn-outline-secondary flex-shrink-0" (click)="toggleProfitVisibility()" [title]="showProfit() ? 'Hide Profit' : 'Show Profit'">
+        <i class="bi" [ngClass]="showProfit() ? 'bi-eye-slash' : 'bi-eye'"></i>
+      </button>
+
       <button class="btn btn-primary d-none d-md-block" (click)="navigateToCreateInvoice()">
         + Create New Invoice
       </button>
@@ -27,7 +33,7 @@
               <th>Customer</th>
               <th class="text-end">Total (&#8377;)</th>
               <th class="text-end">Discount (&#8377;)</th>
-              <th class="text-end">Profit (&#8377;)</th>
+              <th *ngIf="showProfit()" class="text-end">Profit (&#8377;)</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -37,9 +43,8 @@
               <td>{{ sale.customer.name }}</td>
               <td class="text-end fw-bold">&#8377;{{ sale.grandTotal | number: '1.2-2' }}</td>
               <td class="text-end text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</td>
-              <td class="text-end text-success">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</td>
+              <td *ngIf="showProfit()" class="text-end text-success">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</td>
               <td class="text-center">
-                <!-- UPDATED: Added WhatsApp Send Button -->
                 <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success me-2" (click)="sendWhatsAppBill(sale)" title="Send via WhatsApp">Send</button>
                 <button class="btn btn-sm btn-outline-secondary me-2" (click)="downloadInvoice(sale)">Download</button>
                 <button class="btn btn-sm btn-outline-primary me-2" (click)="editInvoice(sale.id)">Edit</button>
@@ -48,7 +53,7 @@
             </tr>
             <!-- Empty State -->
             <tr *ngIf="!(sales$ | async)?.length">
-              <td colspan="6" class="text-center p-5 text-muted">
+              <td [attr.colspan]="showProfit() ? 6 : 5" class="text-center p-5 text-muted">
                 No sales recorded or found.
               </td>
             </tr>
@@ -74,12 +79,12 @@
           <span class="text-warning">Discount:</span>
           <span class="text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</span>
         </div>
-        <div class="d-flex justify-content-between small mb-3">
+        <!-- Conditional Profit View for Mobile -->
+        <div *ngIf="showProfit()" class="d-flex justify-content-between small mb-3">
           <span class="text-success">Profit:</span>
           <span class="text-success fw-bold">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</span>
         </div>
         <div class="d-flex justify-content-end gap-2">
-          <!-- UPDATED: Added WhatsApp Send Button -->
           <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success" (click)="sendWhatsAppBill(sale)">Send</button>
           <button class="btn btn-sm btn-outline-secondary" (click)="downloadInvoice(sale)">Download</button>
           <button class="btn btn-sm btn-outline-primary" (click)="editInvoice(sale.id)">Edit</button>

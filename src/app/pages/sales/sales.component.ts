@@ -22,6 +22,7 @@ export class SalesComponent implements OnInit {
 
   sales$: Observable<Invoice[]> | undefined;
   public isAdmin = signal(false);
+  public showProfit = signal(false);
 
   ngOnInit(): void {
     this.sales$ = this.invoiceService.getInvoices();
@@ -144,5 +145,9 @@ if (!phoneNumber.startsWith('91')) {
       : `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     // 3. Open the URL in a new tab
     window.open(whatsappUrl, '_blank');
+  }
+   // --- NEW: Method to toggle the profit signal's value ---
+  toggleProfitVisibility(): void {
+    this.showProfit.update(currentValue => !currentValue);
   }
 }
