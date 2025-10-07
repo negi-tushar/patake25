@@ -128,8 +128,14 @@ export class SalesComponent implements OnInit {
     message += `Thank you for your purchase!`;
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
+    let phoneNumber = sale.customer.phone.replace(/\D/g, ''); // remove non-digits
+
+// Add +91 if missing
+if (!phoneNumber.startsWith('91')) {
+  phoneNumber = '91' + phoneNumber;
+}
+
     // 2. Sanitize the phone number (remove spaces, +, etc.) and create the URL
-    const phoneNumber = sale.customer.phone.replace(/\D/g, '');
     // const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     const whatsappUrl = isMobile
       ? `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
