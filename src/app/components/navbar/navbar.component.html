@@ -1,22 +1,24 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/dashboard">Kniittsy</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+      aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="closeNavbar()">Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/products" routerLinkActive="active">Products</a>
+          <a class="nav-link" routerLink="/products" routerLinkActive="active" (click)="closeNavbar()">Products</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/sales" routerLinkActive="active">Sales</a>
+          <a class="nav-link" routerLink="/sales" routerLinkActive="active" (click)="closeNavbar()">Sales</a>
         </li>
-         <li class="nav-item">
-          <a class="nav-link" routerLink="/invoice" routerLinkActive="active">Invoice</a>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/invoice" routerLinkActive="active" (click)="closeNavbar()">Invoice</a>
         </li>
       </ul>
       <button class="btn btn-outline-light" (click)="logout()">Logout</button>
