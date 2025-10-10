@@ -63,6 +63,7 @@ private round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) /
 
 
 downloadInvoice(invoice: Invoice): void {
+  console.log('Generating PDF for invoice:', invoice);
   const doc = new jsPDF();
   
   // --- Header ---
@@ -85,7 +86,7 @@ downloadInvoice(invoice: Invoice): void {
 
   autoTable(doc, {
     startY: 55,
-    head: [['Item', 'Qty', 'MRP (₹)', 'Price (₹)', 'Total (₹)']],
+    head: [['Item', 'Qty', 'MRP', 'Price', 'Total']],
     body: tableBody,
     theme: 'grid',
     headStyles: { fillColor: [41, 128, 186], textColor: 255, fontStyle: 'bold' }
@@ -95,7 +96,7 @@ downloadInvoice(invoice: Invoice): void {
   const finalY = (doc as any).lastAutoTable.finalY;
   doc.setFontSize(12);
   
-  const subTotalMRP = invoice.items.reduce((sum, i) => sum + (i.baseSellPriceAtSale * i.qty), 0);
+  const subTotalMRP = invoice.items.reduce((sum, i) => sum + (i.finalSellPricePerUnit * i.qty), 0);
   const builtInDiscount = subTotalMRP - invoice.subTotal;
 
   doc.text(`Total MRP:`, 14, finalY + 10);
