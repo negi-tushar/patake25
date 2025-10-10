@@ -2,63 +2,60 @@
   <h2 class="mb-4">Create Invoice</h2>
 
   <div class="row g-4">
-    <!-- LEFT COLUMN: PRODUCT PICKER -->
+    <!-- LEFT: PRODUCT PICKER -->
     <div class="col-lg-6">
       <div class="card h-100 shadow-sm border-0">
-        <!-- Search Header -->
         <div class="card-header bg-white sticky-top" style="z-index: 10;">
-          <input
-            class="form-control"
-            [formControl]="searchControl"
-            placeholder="Search products..."
-          />
+          <input class="form-control" [formControl]="searchControl" placeholder="Search products..." />
         </div>
-          <div class="d-flex justify-content-between text-info"><span>My:</span> <span>&#8377;{{ profitAfterDiscount() | number:'1.2-2' }}</span></div>
+        <div class="d-flex justify-content-between text-info px-3 py-2">
+          <span>My Profit:</span> 
+          <span>&#8377;{{ profitAfterDiscount() | number:'1.2-2' }}</span>
+        </div>
 
         <!-- Desktop Table -->
         <div class="card-body p-0 d-none d-md-block">
           <div class="table-responsive" style="max-height: 75vh; overflow-y: auto;">
             <table class="table table-sm table-hover align-middle mb-0">
               <tbody>
-                <tr
-                  *ngFor="let p of filteredProducts()"
-                  (click)="addLineFromProduct(p)"
-                  style="cursor: pointer;"
-                >
-                  <td>{{ p.name }}</td>
+                <tr *ngFor="let p of filteredProducts()" (click)="addLineFromProduct(p)" style="cursor: pointer;">
+                  <td>
+                    <div>{{ p.name }}</div>
+                    <div class="small">
+                      <span class="text-muted text-decoration-line-through">
+                        &#8377;{{ getMRP(p) | number: '1.2-2' }}
+                      </span>
+                      <span class="fw-bold ms-2">&#8377;{{ p.sellPrice | number:'1.2-2' }}</span>
+                      <span *ngIf="getItemDiscount(p) > 0" class="badge bg-success ms-1">
+                        Save &#8377;{{ getItemDiscount(p) | number:'1.2-2' }}
+                      </span>
+                    </div>
+                  </td>
                   <td class="text-end text-muted">Stock: {{ p.quantity }}</td>
-                  <td class="text-end">₹{{ p.sellPrice | number: '1.2-2' }}</td>
                 </tr>
                 <tr *ngIf="filteredProducts().length === 0">
-                  <td colspan="3" class="text-center p-4 text-muted">
-                    No products match your search.
-                  </td>
+                  <td colspan="2" class="text-center p-4 text-muted">No products match your search.</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Mobile Product List (scrollable) -->
-        <div
-          class="card-body d-block d-md-none product-scroll"
-          style="max-height: 50vh; overflow-y: auto;"
-        >
-          <div
-            *ngFor="let p of filteredProducts()"
-            (click)="addLineFromProduct(p)"
-            class="border-bottom py-2 px-1"
-            style="cursor: pointer;"
-          >
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <strong>{{ p.name }}</strong>
-                <div class="small text-muted">Stock: {{ p.quantity }}</div>
-              </div>
-              <div class="fw-bold">₹{{ p.sellPrice | number: '1.2-2' }}</div>
+        <!-- Mobile List -->
+        <div class="card-body d-block d-md-none" style="max-height: 50vh; overflow-y: auto;">
+          <div *ngFor="let p of filteredProducts()" (click)="addLineFromProduct(p)" class="border-bottom py-2" style="cursor: pointer;">
+            <div><strong>{{ p.name }}</strong></div>
+            <div class="small text-muted">Stock: {{ p.quantity }}</div>
+            <div class="small">
+              <span class="text-muted text-decoration-line-through">
+                &#8377;{{ getMRP(p) | number:'1.2-2' }}
+              </span>
+              <span class="fw-bold ms-2">&#8377;{{ p.sellPrice | number:'1.2-2' }}</span>
+              <span *ngIf="getItemDiscount(p) > 0" class="badge bg-success ms-1">
+                Save &#8377;{{ getItemDiscount(p) | number:'1.2-2' }}
+              </span>
             </div>
           </div>
-
           <div *ngIf="filteredProducts().length === 0" class="text-center text-muted py-3">
             No products match your search.
           </div>
@@ -66,24 +63,21 @@
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: INVOICE DETAILS -->
+    <!-- RIGHT: CART & SUMMARY -->
     <div class="col-lg-6">
-      <!-- CART ITEMS -->
+      <!-- CART -->
       <div class="card shadow-sm border-0 mb-3">
         <div class="card-body">
-          <div *ngIf="lines().length === 0" class="text-center p-4 text-muted">
-            No items in cart.
-          </div>
+          <div *ngIf="lines().length === 0" class="text-center p-4 text-muted">No items in cart.</div>
 
-          <!-- Desktop Table -->
+          <!-- Desktop -->
           <div *ngIf="lines().length > 0" class="table-responsive d-none d-md-block">
             <table class="table table-sm align-middle">
               <thead>
                 <tr>
                   <th>Item</th>
                   <th class="text-center">Qty</th>
-                  <th>Sell Price</th>
-                  <th>Margin %</th>
+                  <th>Price</th>
                   <th class="text-end">Total</th>
                   <th></th>
                 </tr>
@@ -93,178 +87,96 @@
                   <td>{{ l.name }}</td>
                   <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                      <button
-                        class="btn btn-outline-secondary"
-                        (click)="changeQty(i, -1)"
-                      >-</button>
+                      <button class="btn btn-outline-secondary" (click)="changeQty(i, -1)">-</button>
                       <button class="btn btn-light" disabled>{{ l.qty }}</button>
-                      <button
-                        class="btn btn-outline-secondary"
-                        (click)="changeQty(i, 1)"
-                      >+</button>
+                      <button class="btn btn-outline-secondary" (click)="changeQty(i, 1)">+</button>
                     </div>
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      class="form-control form-control-sm"
-                      [value]="l.sellPrice"
-                      (change)="updateSellPrice(i, $event)"
-                    />
+                    <input type="number" class="form-control form-control-sm" [value]="l.sellPrice" (change)="updateSellPrice(i, $event)" />
                   </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control form-control-sm"
-                      [value]="l.marginPercent"
-                      (change)="updateMargin(i, $event)"
-                    />
-                  </td>
-                  <td class="text-end fw-bold">
-                    ₹{{ (l.sellPrice * l.qty) | number: '1.2-2' }}
-                  </td>
-                  <td>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      (click)="removeLine(i)"
-                    >×</button>
-                  </td>
+                  <td class="text-end fw-bold">&#8377;{{ (l.sellPrice * l.qty) | number: '1.2-2' }}</td>
+                  <td><button class="btn btn-sm btn-outline-danger" (click)="removeLine(i)">×</button></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Mobile Card View -->
+          <!-- Mobile -->
           <div *ngIf="lines().length > 0" class="d-block d-md-none">
-            <div
-              *ngFor="let l of lines(); let i = index"
-              class="border rounded p-2 mb-2 shadow-sm"
-            >
+            <div *ngFor="let l of lines(); let i = index" class="border rounded p-2 mb-2">
               <div class="d-flex justify-content-between">
                 <strong>{{ l.name }}</strong>
-                <button
-                  class="btn btn-sm btn-outline-danger py-0 px-2"
-                  (click)="removeLine(i)"
-                >×</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2" (click)="removeLine(i)">×</button>
               </div>
-              <div class="small text-muted mb-2">
-                ₹{{ l.sellPrice | number: '1.2-2' }} × {{ l.qty }}
-              </div>
+              <div class="small text-muted mb-2">&#8377;{{ l.sellPrice | number: '1.2-2' }} × {{ l.qty }}</div>
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="btn-group btn-group-sm">
-                  <button
-                    class="btn btn-outline-secondary"
-                    (click)="changeQty(i, -1)"
-                  >-</button>
+                  <button class="btn btn-outline-secondary" (click)="changeQty(i, -1)">-</button>
                   <button class="btn btn-light" disabled>{{ l.qty }}</button>
-                  <button
-                    class="btn btn-outline-secondary"
-                    (click)="changeQty(i, 1)"
-                  >+</button>
+                  <button class="btn btn-outline-secondary" (click)="changeQty(i, 1)">+</button>
                 </div>
-                <span class="fw-bold">₹{{ (l.sellPrice * l.qty) | number: '1.2-2' }}</span>
+                <span class="fw-bold">&#8377;{{ (l.sellPrice * l.qty) | number: '1.2-2' }}</span>
               </div>
-              <div class="row g-2 small">
-                <div class="col-6">
-                  <label class="form-label mb-0">Sell Price</label>
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    [value]="l.sellPrice"
-                    (change)="updateSellPrice(i, $event)"
-                  />
-                </div>
-                <div class="col-6">
-                  <label class="form-label mb-0">Margin %</label>
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    [value]="l.marginPercent"
-                    (change)="updateMargin(i, $event)"
-                  />
-                </div>
+              <div>
+                <label class="form-label mb-0 small">Price</label>
+                <input type="number" class="form-control form-control-sm" [value]="l.sellPrice" (change)="updateSellPrice(i, $event)" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- CUSTOMER & SUMMARY (Sticky on Mobile) -->
-      <div class="card shadow-sm border-0 summary-card">
+      <!-- SUMMARY -->
+      <div class="card shadow-sm border-0">
         <div class="card-body">
           <div class="mb-3">
-            <input
-              class="form-control"
-              [formControl]="customerName"
-              placeholder="Customer Name (defaults to 'John')"
-            />
+            <input class="form-control" [formControl]="customerName" placeholder="Customer Name (defaults to 'John')" />
           </div>
           <div class="mb-3">
-            <input
-              type="tel"
-              class="form-control"
-              [formControl]="customerPhone"
-              placeholder="Customer Phone (optional)"
-            />
+            <input type="tel" class="form-control" [formControl]="customerPhone" placeholder="Customer Phone (optional)" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Mode</label>
+            <select class="form-select" [value]="paymentMode()" (change)="paymentMode.set($any($event.target).value)">
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+            </select>
           </div>
 
           <hr />
           <div class="row g-3 align-items-end">
             <div class="col-6">
-              <label class="form-label">Discount Mode</label>
-              <select
-                class="form-select"
-                [value]="discountMode()"
-                (change)="discountMode.set($any($event.target).value)"
-              >
-                <option value="flat">Flat (₹)</option>
+              <label class="form-label">Extra Discount Mode</label>
+              <select class="form-select" [value]="discountMode()" (change)="discountMode.set($any($event.target).value)">
+                <option value="flat">Flat (&#8377;)</option>
                 <option value="percent">Percent (%)</option>
               </select>
             </div>
             <div class="col-6">
-              <label class="form-label">Discount Value</label>
-              <input
-                type="number"
-                class="form-control"
-                [value]="discountValue()"
-                (change)="discountValue.set(+$any($event.target).value)"
-              />
+              <label class="form-label">Extra Discount Value</label>
+              <input type="number" class="form-control" [value]="discountValue()" (change)="discountValue.set(+$any($event.target).value)" />
             </div>
           </div>
 
           <hr />
           <div class="d-flex justify-content-between text-muted">
             <span>Subtotal:</span>
-            <span>₹{{ subTotal() | number: '1.2-2' }}</span>
+            <span>&#8377;{{ subTotal() | number: '1.2-2' }}</span>
           </div>
           <div class="d-flex justify-content-between text-muted">
-            <span>Discount:</span>
-            <span>- ₹{{ discountAmount() | number: '1.2-2' }}</span>
+            <span>Extra Discount:</span>
+            <span>- &#8377;{{ extraDiscountAmount() | number: '1.2-2' }}</span>
           </div>
           <div class="d-flex justify-content-between h4 mt-2">
             <span>Grand Total:</span>
-            <span>₹{{ grandTotal() | number: '1.2-2' }}</span>
+            <span>&#8377;{{ grandTotal() | number: '1.2-2' }}</span>
           </div>
 
           <hr />
-          <!-- <div class="d-flex justify-content-between text-success">
-            <span>Profit:</span>
-            <span>₹{{ profitAfterDiscount() | number: '1.2-2' }}</span>
-          </div> -->
-           <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        (click)="openPreviewModal()"
-        [disabled]="lines().length === 0">
-        Preview
-      </button>
-
-          <div class="d-grid mt-4">
-            <button
-              class="btn btn-primary btn-lg"
-              (click)="saveInvoice()"
-              [disabled]="saving() || lines().length === 0"
-            >
+          <button type="button" class="btn btn-outline-secondary" (click)="openPreviewModal()" [disabled]="lines().length === 0">Preview</button>
+          <div class="d-grid mt-3">
+            <button class="btn btn-primary btn-lg" (click)="saveInvoice()" [disabled]="saving() || lines().length === 0">
               {{ saving() ? 'Saving...' : 'Save Invoice' }}
             </button>
           </div>
@@ -274,57 +186,47 @@
   </div>
 
   <!-- TOAST -->
-  <div
-    class="toast-container position-fixed bottom-0 end-0 p-3"
-    *ngIf="toast()"
-  >
-    <div
-      class="toast show align-items-center"
-      [ngClass]="{
-        'text-bg-success': toast()?.type === 'success',
-        'text-bg-danger': toast()?.type === 'error'
-      }"
-    >
-      <div class="d-flex">
-        <div class="toast-body">{{ toast()?.msg }}</div>
-      </div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" *ngIf="toast()">
+    <div class="toast show" [ngClass]="{'text-bg-success': toast()?.type === 'success', 'text-bg-danger': toast()?.type === 'error'}">
+      <div class="toast-body">{{ toast()?.msg }}</div>
     </div>
   </div>
 </div>
-<!-- NEW: Add this entire modal block at the bottom of your file -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+
+<!-- PREVIEW MODAL -->
+<div class="modal fade" id="previewModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="previewModalLabel">Invoice Preview</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title">Invoice Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <!-- Customer and Totals -->
-       <div class="row g-2 mb-3">
-          <div class="col-sm-6">
-            <input
-              class="form-control"
-              [formControl]="customerName"
-              placeholder="Customer Name"
-            />
-          </div>
-          <div class="col-sm-6">
-            <input
-              type="tel"
-              class="form-control"
-              [formControl]="customerPhone"
-              placeholder="Customer Phone (optional)"
-            />
+        <!-- Customer Info Display (Not editable in preview) -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>Customer:</strong> {{ customerName.value || 'John' }}
+            </div>
+            <div *ngIf="customerPhone.value">
+              <strong>Phone:</strong> {{ customerPhone.value }}
+            </div>
           </div>
         </div>
+        
+        <div class="mb-3">
+          <strong>Payment Mode:</strong> 
+          <span class="badge bg-primary ms-2">{{ paymentMode() === 'cash' ? 'Cash' : 'UPI' }}</span>
+        </div>
 
-        <!-- Items Table -->
-        <table class="table table-striped">
+        <hr>
+
+        <table class="table table-sm">
           <thead class="table-light">
             <tr>
               <th>Item</th>
               <th class="text-center">Qty</th>
+              <th class="text-end">MRP</th>
               <th class="text-end">Price</th>
               <th class="text-end">Total</th>
             </tr>
@@ -333,24 +235,24 @@
             <tr *ngFor="let l of lines()">
               <td>{{ l.name }}</td>
               <td class="text-center">{{ l.qty }}</td>
+              <td class="text-end text-muted text-decoration-line-through">&#8377;{{ l.mrp | number:'1.2-2' }}</td>
               <td class="text-end">&#8377;{{ l.sellPrice | number:'1.2-2' }}</td>
               <td class="text-end fw-bold">&#8377;{{ (l.sellPrice * l.qty) | number:'1.2-2' }}</td>
             </tr>
           </tbody>
         </table>
-          <div class="d-flex justify-content-between"><span>Subtotal:</span> <span>&#8377;{{ subTotal() | number:'1.2-2' }}</span></div>
-          <div class="d-flex justify-content-between"><span>Discount:</span> <span class="text-warning">- &#8377;{{ discountAmount() | number:'1.2-2' }}</span></div>
-          <div class="d-flex justify-content-between fw-bold h5 mt-2"><span>Grand Total:</span> <span>&#8377;{{ grandTotal() | number:'1.2-2' }}</span></div>
-          <!-- <div class="d-flex justify-content-between text-success"><span>Profit:</span> <span>&#8377;{{ profitAfterDiscount() | number:'1.2-2' }}</span></div> -->
+
+        <div class="d-flex justify-content-between"><span>Subtotal (MRP):</span> <span class="text-decoration-line-through">&#8377;{{ subTotalMRP() | number:'1.2-2' }}</span></div>
+        <div class="d-flex justify-content-between text-success"><span>Built-in Discount:</span> <span>- &#8377;{{ builtInDiscount() | number:'1.2-2' }}</span></div>
+        <div class="d-flex justify-content-between"><span>Subtotal (After Item Discount):</span> <span>&#8377;{{ subTotal() | number:'1.2-2' }}</span></div>
+        <div class="d-flex justify-content-between text-warning" *ngIf="extraDiscountAmount() > 0">
+          <span>Extra Discount:</span> <span>- &#8377;{{ extraDiscountAmount() | number:'1.2-2' }}</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold h5 mt-2"><span>Grand Total:</span> <span>&#8377;{{ grandTotal() | number:'1.2-2' }}</span></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button 
-          type="button" 
-          class="btn btn-primary" 
-          (click)="saveFromPreview()"
-          [disabled]="saving()"
-        >
+        <button type="button" class="btn btn-primary" (click)="saveFromPreview()" [disabled]="saving()">
           {{ saving() ? 'Saving...' : 'Confirm & Save' }}
         </button>
       </div>

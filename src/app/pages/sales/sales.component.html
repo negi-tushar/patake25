@@ -10,9 +10,10 @@
         placeholder="Search by customer..." 
         [formControl]="searchControl"
       > -->
-      
+
       <!-- Toggle Profit Button -->
-      <button class="btn btn-outline-secondary flex-shrink-0" (click)="toggleProfitVisibility()" [title]="showProfit() ? 'Hide Profit' : 'Show Profit'">
+      <button class="btn btn-outline-secondary flex-shrink-0" (click)="toggleProfitVisibility()"
+        [title]="showProfit() ? 'Hide Profit' : 'Show Profit'">
         <i class="bi" [ngClass]="showProfit() ? 'bi-eye-slash' : 'bi-eye'"></i>
       </button>
 
@@ -31,8 +32,10 @@
             <tr>
               <th>Date</th>
               <th>Customer</th>
-              <th class="text-end">Total (&#8377;)</th>
-              <th class="text-end">Discount (&#8377;)</th>
+              <th class="text-center">Total (&#8377;)</th>
+              <th class="text-center">Discount (&#8377;)</th>
+              <th class="text-center">Payment Mode (&#8377;)</th>
+
               <th *ngIf="showProfit()" class="text-end">Profit (&#8377;)</th>
               <th class="text-center">Actions</th>
             </tr>
@@ -41,14 +44,19 @@
             <tr *ngFor="let sale of sales$ | async">
               <td>{{ sale.createdAt.toDate() | date: 'medium' }}</td>
               <td>{{ sale.customer.name }}</td>
-              <td class="text-end fw-bold">&#8377;{{ sale.grandTotal | number: '1.2-2' }}</td>
-              <td class="text-end text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</td>
-              <td *ngIf="showProfit()" class="text-end text-success">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</td>
+              <td class="text-center fw-bold">&#8377;{{ sale.grandTotal | number: '1.2-2' }}</td>
+              <td class="text-center text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</td>
+              <td class="text-center text-info">{{ sale.paymentMode }}</td>
+
+              <td *ngIf="showProfit()" class="text-end text-success">&#8377;{{ sale.profitTotalAfterDiscount | number:
+                '1.2-2' }}</td>
               <td class="text-center">
-                <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success me-2" (click)="sendWhatsAppBill(sale)" title="Send via WhatsApp">Send</button>
+                <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success me-2" (click)="sendWhatsAppBill(sale)"
+                  title="Send via WhatsApp">Send</button>
                 <button class="btn btn-sm btn-outline-secondary me-2" (click)="downloadInvoice(sale)">Download</button>
                 <button class="btn btn-sm btn-outline-primary me-2" (click)="editInvoice(sale.id)">Edit</button>
-                <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger" (click)="deleteInvoice(sale.id)">Delete</button>
+                <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger"
+                  (click)="deleteInvoice(sale.id)">Delete</button>
               </td>
             </tr>
             <!-- Empty State -->
@@ -79,16 +87,22 @@
           <span class="text-warning">Discount:</span>
           <span class="text-warning">&#8377;{{ sale.discountAmount | number: '1.2-2' }}</span>
         </div>
+          <div class="d-flex justify-content-between small mb-1">
+          <span>Payment Mode:</span>
+          <span class="text-info">{{ sale.paymentMode }}</span>
+        </div>
         <!-- Conditional Profit View for Mobile -->
         <div *ngIf="showProfit()" class="d-flex justify-content-between small mb-3">
           <span class="text-success">Profit:</span>
           <span class="text-success fw-bold">&#8377;{{ sale.profitTotalAfterDiscount | number: '1.2-2' }}</span>
         </div>
         <div class="d-flex justify-content-end gap-2">
-          <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success" (click)="sendWhatsAppBill(sale)">Send</button>
+          <button *ngIf="sale.customer.phone" class="btn btn-sm btn-success"
+            (click)="sendWhatsAppBill(sale)">Send</button>
           <button class="btn btn-sm btn-outline-secondary" (click)="downloadInvoice(sale)">Download</button>
           <button class="btn btn-sm btn-outline-primary" (click)="editInvoice(sale.id)">Edit</button>
-          <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger" (click)="deleteInvoice(sale.id)">Delete</button>
+          <button *ngIf="isAdmin()" class="btn btn-sm btn-outline-danger"
+            (click)="deleteInvoice(sale.id)">Delete</button>
         </div>
       </div>
     </div>

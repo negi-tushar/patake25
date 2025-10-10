@@ -72,6 +72,15 @@
             <span class="text-muted">Profit in Period:</span>
             <span class="fw-bold fs-5 text-success">&#8377;{{ filteredTotalProfit() | number:'1.2-2' }}</span>
           </div>
+
+            <div class="d-flex justify-content-between">
+            <span class="text-muted">Cash payments:</span>
+            <span class="fw-bold fs-5 text-info">&#8377;{{ filteredCashPayments() | number:'1.2-2' }}</span>
+        
+          </div>  <div class="d-flex justify-content-between">
+            <span class="text-muted">UPI payments:</span>
+            <span class="fw-bold fs-5 text-warning">&#8377;{{ filteredUpiPayments() | number:'1.2-2' }}</span>
+          </div>
         </div>
       </div>
       

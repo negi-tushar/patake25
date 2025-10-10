@@ -34,6 +34,7 @@ export interface SaveInvoicePayload {
   customer: { name: string,   phone?: string; };
   items: InvoiceItem[];
   subTotal: number;
+  paymentMode: 'cash' | 'upi' | 'mixed';
   discount: { mode: 'flat' | 'percent'; value: number };
   discountAmount: number;
   grandTotal: number;

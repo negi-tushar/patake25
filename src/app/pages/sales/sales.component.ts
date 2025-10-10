@@ -23,6 +23,11 @@ export class SalesComponent implements OnInit {
   sales$: Observable<Invoice[]> | undefined;
   public isAdmin = signal(false);
   public showProfit = signal(false);
+// Add this constant at the top of your component class
+private readonly MRP_MARKUP_PERCENT = 20;
+
+// Helper method to round numbers consistently
+private round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
 
   ngOnInit(): void {
     this.sales$ = this.invoiceService.getInvoices();
@@ -56,98 +61,119 @@ export class SalesComponent implements OnInit {
     }
   }
 
-  downloadInvoice(invoice: Invoice): void {
-    const doc = new jsPDF();
 
-    // Add Header
-    doc.setFontSize(20);
-    doc.text('Invoice', 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Invoice ID: ${invoice.id}`, 14, 30);
-    doc.text(
-      `Date: ${invoice.createdAt.toDate().toLocaleDateString()}`,
-      14,
-      36
-    );
-    doc.text(`Customer: ${invoice.customer.name}`, 14, 42);
+downloadInvoice(invoice: Invoice): void {
+  const doc = new jsPDF();
+  
+  // --- Header ---
+  doc.setFontSize(20);
+  doc.text('Invoice', 14, 22);
+  doc.setFontSize(12);
+  doc.text(`Invoice ID: ${invoice.id}`, 14, 30);
+  doc.text(`Date: ${invoice.createdAt.toDate().toLocaleDateString()}`, 14, 36);
+  doc.text(`Customer: ${invoice.customer.name}`, 14, 42);
+  doc.text(`Payment Mode: ${invoice.paymentMode || 'N/A'}`, 14, 48);
 
-    // Add Table
-    autoTable(doc, {
-      startY: 50,
-      head: [['Item', 'Qty', 'Price', 'Total']],
-      body: invoice.items.map((item) => [
-        item.name,
-        item.qty,
-        item.finalSellPricePerUnit.toFixed(2),
-        item.lineSubTotal.toFixed(2),
-      ]),
-      theme: 'grid',
-    });
+  // --- Table ---
+  const tableBody = invoice.items.map(item => [
+    item.name,
+    item.qty,
+    item.baseSellPriceAtSale.toFixed(2), // MRP
+    item.finalSellPricePerUnit.toFixed(2), // Actual Price
+    item.lineSubTotal.toFixed(2) // Total
+  ]);
 
-    // Add Footer with Totals
-    const finalY = (doc as any).lastAutoTable.finalY;
-    doc.setFontSize(12);
-    doc.text(`Subtotal: ${invoice.subTotal.toFixed(2)}`, 14, finalY + 10);
-    doc.text(
-      `Discount: -${invoice.discountAmount.toFixed(2)}`,
-      14,
-      finalY + 16
-    );
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Grand Total: ${invoice.grandTotal.toFixed(2)}`, 14, finalY + 24);
+  autoTable(doc, {
+    startY: 55,
+    head: [['Item', 'Qty', 'MRP (₹)', 'Price (₹)', 'Total (₹)']],
+    body: tableBody,
+    theme: 'grid',
+    headStyles: { fillColor: [41, 128, 186], textColor: 255, fontStyle: 'bold' }
+  });
 
-    // Save the PDF
-    const fileName = `Invoice-${invoice.customer.name.replace(
-      ' ',
-      '_'
-    )}-${invoice.id.substring(0, 5)}.pdf`;
-    doc.save(fileName);
+  // --- Footer Totals ---
+  const finalY = (doc as any).lastAutoTable.finalY;
+  doc.setFontSize(12);
+  
+  const subTotalMRP = invoice.items.reduce((sum, i) => sum + (i.baseSellPriceAtSale * i.qty), 0);
+  const builtInDiscount = subTotalMRP - invoice.subTotal;
+
+  doc.text(`Total MRP:`, 14, finalY + 10);
+  doc.text(`${this.round2(subTotalMRP).toFixed(2)}`, 200, finalY + 10, { align: 'right' });
+  
+  doc.text(`Built-in Discount:`, 14, finalY + 16);
+  doc.text(`- ${this.round2(builtInDiscount).toFixed(2)}`, 200, finalY + 16, { align: 'right' });
+
+  doc.text(`Subtotal:`, 14, finalY + 22);
+  doc.text(`${invoice.subTotal.toFixed(2)}`, 200, finalY + 22, { align: 'right' });
+
+  if (invoice.discountAmount > 0) {
+    doc.setTextColor(231, 76, 60); // red
+    doc.text(`Extra Discount:`, 14, finalY + 28);
+    doc.text(`- ${invoice.discountAmount.toFixed(2)}`, 200, finalY + 28, { align: 'right' });
+    doc.setTextColor(0, 0, 0); // reset color
   }
 
-  sendWhatsAppBill(sale: Invoice): void {
-    if (!sale.customer.phone) {
-      alert('No phone number is available for this customer.');
-      return;
-    }
-
-    // 1. Format the bill into a plain text message
-    // Note: %0A is the code for a line break in a URL
-    let message = `*Invoice for ${sale.customer.name}*\n\n`;
-    message += `Here is your bill summary:\n\n`;
-    message += `*Items:*\n`;
-
-    sale.items.forEach((item) => {
-      const total = (item.finalSellPricePerUnit * item.qty).toFixed(2);
-      message += `- ${item.name} (${item.qty} x ${item.finalSellPricePerUnit}) = *${total}*\n`;
-    });
-
-    message += `\n-----------------------\n`;
-    message += `Subtotal: ${sale.subTotal.toFixed(2)}\n`;
-    message += `Discount: -${sale.discountAmount.toFixed(2)}\n`;
-    message += `*Grand Total: ${sale.grandTotal.toFixed(2)}*\n\n`;
-    message += `Thank you for your purchase!`;
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-    let phoneNumber = sale.customer.phone.replace(/\D/g, ''); // remove non-digits
-
-// Add +91 if missing
-if (!phoneNumber.startsWith('91')) {
-  phoneNumber = '91' + phoneNumber;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Grand Total:`, 14, finalY + 36);
+  doc.text(`${invoice.grandTotal.toFixed(2)}`, 200, finalY + 36, { align: 'right' });
+  
+  // --- Save PDF ---
+  const fileName = `Invoice-${invoice.customer.name.replace(/\s+/g, '_')}-${invoice.id.substring(0, 5)}.pdf`;
+  doc.save(fileName);
 }
 
-    // 2. Sanitize the phone number (remove spaces, +, etc.) and create the URL
-    // const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    const whatsappUrl = isMobile
-      ? `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
-          message
-        )}`
-      : `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    // 3. Open the URL in a new tab
-    window.open(whatsappUrl, '_blank');
+sendWhatsAppBill(sale: Invoice): void {
+  if (!sale.customer.phone) {
+    alert('No phone number is available for this customer.');
+    return;
   }
-   // --- NEW: Method to toggle the profit signal's value ---
-  toggleProfitVisibility(): void {
-    this.showProfit.update(currentValue => !currentValue);
+
+  let message = `*Invoice for ${sale.customer.name}*\n\n`;
+  message += `Here is your bill summary:\n\n`;
+  
+  sale.items.forEach(item => {
+    const mrp = item.baseSellPriceAtSale.toFixed(2);
+    const price = item.finalSellPricePerUnit.toFixed(2);
+    const total = item.lineSubTotal.toFixed(2);
+    message += `*${item.name}* (${item.qty} x ${price})\n`;
+    message += `~${mrp}~ *${price}* = *${total}*\n\n`;
+  });
+
+  message += `-----------------------\n`;
+  
+  const subTotalMRP = sale.items.reduce((sum, i) => sum + (i.baseSellPriceAtSale * i.qty), 0);
+  const builtInDiscount = subTotalMRP - sale.subTotal;
+  
+  message += `Total MRP: ~${this.round2(subTotalMRP).toFixed(2)}~\n`;
+  message += `Item Discounts: -${this.round2(builtInDiscount).toFixed(2)}\n`;
+  message += `Subtotal: ${sale.subTotal.toFixed(2)}\n`;
+  
+  if (sale.discountAmount > 0) {
+    message += `Extra Discount: -${sale.discountAmount.toFixed(2)}\n`;
   }
+  
+  message += `*Grand Total: ${sale.grandTotal.toFixed(2)}*\n\n`;
+  message += `Payment via *${sale.paymentMode || 'N/A'}*.\nThank you for your purchase!`;
+
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  let phoneNumber = sale.customer.phone.replace(/\D/g, '');
+  if (!phoneNumber.startsWith('91')) {
+    phoneNumber = '91' + phoneNumber;
+  }
+  
+  const whatsappUrl = isMobile
+    ? `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
+    : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+    
+  window.open(whatsappUrl, '_blank');
+}
+
+// Method to toggle profit visibility
+toggleProfitVisibility(): void {
+  this.showProfit.update(currentValue => !currentValue);
+}
+
+
 }

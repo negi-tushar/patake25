@@ -68,6 +68,18 @@ export class DashboardComponent implements OnInit {
   filteredTotalProfit = computed(() => 
     this.filteredInvoices().reduce((sum, inv) => sum + inv.profitTotalAfterDiscount, 0)
   );
+
+   filteredUpiPayments = computed(() => 
+    this.filteredInvoices()
+      .filter(inv => inv.paymentMode === 'upi')
+      .reduce((sum, inv) => sum + inv.grandTotal, 0)
+  );
+
+  filteredCashPayments = computed(() => 
+    this.filteredInvoices()
+      .filter(inv => inv.paymentMode === 'cash')
+      .reduce((sum, inv) => sum + inv.grandTotal, 0)
+  );
   filteredTopSellingItem = computed(() => {
     const itemCounts = new Map<string, { name: string; count: number }>();
     for (const invoice of this.filteredInvoices()) {
