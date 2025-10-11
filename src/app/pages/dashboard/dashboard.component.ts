@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { Chart, ChartConfiguration, ChartOptions, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, DoughnutController, ArcElement } from 'chart.js';
+import { Chart, ChartConfiguration, ChartOptions, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, DoughnutController, ArcElement, Legend, Tooltip } from 'chart.js';
 import { firstValueFrom } from 'rxjs';
 
 import { Invoice, InvoiceService } from '../../services/invoice.service';
@@ -22,7 +22,7 @@ export class DashboardComponent implements OnInit {
   constructor() {
     Chart.register(
       LineController, LineElement, PointElement, LinearScale, Title, CategoryScale,
-      DoughnutController, ArcElement
+      DoughnutController, ArcElement,Legend,Tooltip
     );
   }
 
@@ -107,23 +107,55 @@ export class DashboardComponent implements OnInit {
   });
 
   // --- NEW: Chart configuration for the doughnut chart ---
-  public get doughnutChartData(): ChartConfiguration<'doughnut'>['data'] {
-    return {
-      labels: this.stockByCategory().map(c => c.name),
-      datasets: [{
-        data: this.stockByCategory().map(c => c.value),
-        backgroundColor: [
-          '#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899',
-          '#F59E0B', '#14B8A6', '#6366F1', '#D946EF', '#0EA5E9'
-        ],
-        hoverBackgroundColor: [
-          '#2563EB', '#059669', '#EA580C', '#7C3AED', '#DB2777',
-          '#D97706', '#0D9488', '#4F46E5', '#C026D3', '#0284C7'
-        ],
-        borderWidth: 1,
-      }]
-    };
-  }
+// Add this helper method inside your DashboardComponent class
+private shadeColor(color: string, percent: number): string {
+  let R = parseInt(color.substring(1, 3), 16);
+  let G = parseInt(color.substring(3, 5), 16);
+  let B = parseInt(color.substring(5, 7), 16);
+
+  R = Math.floor(R * (100 + percent) / 100);
+  G = Math.floor(G * (100 + percent) / 100);
+  B = Math.floor(B * (100 + percent) / 100);
+
+  R = (R < 255) ? R : 255;  
+  G = (G < 255) ? G : 255;  
+  B = (B < 255) ? B : 255;  
+
+  const RR = ((R.toString(16).length === 1) ? "0" + R.toString(16) : R.toString(16));
+  const GG = ((G.toString(16).length === 1) ? "0" + G.toString(16) : G.toString(16));
+  const BB = ((B.toString(16).length === 1) ? "0" + B.toString(16) : B.toString(16));
+
+  return "#" + RR + GG + BB;
+}
+
+// Replace your existing doughnutChartData getter with this one
+public get doughnutChartData(): ChartConfiguration<'doughnut'>['data'] {
+  // A new, high-contrast color palette
+  const distinctColors = [
+    '#1f77b4', // Muted Blue
+    '#ff7f0e', // Safety Orange
+    '#2ca02c', // Cooked Asparagus Green
+    '#d62728', // Brick Red
+    '#9467bd', // Muted Purple
+    '#8c564b', // Chestnut Brown
+    '#e377c2', // Raspberry Pink
+    '#7f7f7f', // Middle Gray
+    '#bcbd22', // Curry Yellow-Green
+    '#17becf'  // Pacific Blue
+  ];
+
+  return {
+    labels: this.stockByCategory().map(c => c.name),
+    datasets: [{
+      data: this.stockByCategory().map(c => c.value),
+      backgroundColor: distinctColors,
+      // Automatically generate a slightly darker hover color
+      hoverBackgroundColor: distinctColors.map(color => this.shadeColor(color, -10)),
+      borderWidth: 1,
+    }]
+  };
+}
+
   public doughnutChartOptions: ChartOptions<'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -143,8 +175,28 @@ export class DashboardComponent implements OnInit {
 
   // --- CHART CONFIG ---
   public lineChartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
-  public lineChartOptions: ChartOptions<'line'> = { responsive: true, maintainAspectRatio: false };
-
+  public lineChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: { size: 14, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 10,
+        cornerRadius: 4,
+      }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true }
+    }
+  };
   async ngOnInit(): Promise<void> {
     this.isLoading.set(true);
     const [invoices, products] = await Promise.all([
