@@ -151,7 +151,7 @@ profitAfterDiscount = computed(() =>
         qty: item.qty,
         rate: item.costPriceAtSale,
         costPrice: item.costPriceAtSale,
-        mrp: this.round2(item.costPriceAtSale * this.margin),
+        mrp: this.round2(item.finalSellPricePerUnit * this.margin),
         sellPrice: item.finalSellPricePerUnit,
       }));
       this.lines.set(cartLines);

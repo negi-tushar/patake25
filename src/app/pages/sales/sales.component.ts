@@ -102,7 +102,7 @@ downloadInvoice(invoice: Invoice): void {
   doc.text(`Total MRP:`, 14, finalY + 10);
   doc.text(`${this.round2(subTotalMRP).toFixed(2)}`, 200, finalY + 10, { align: 'right' });
   
-  doc.text(`Built-in Discount:`, 14, finalY + 16);
+  doc.text(`Item Discounts:`, 14, finalY + 16);
   doc.text(`- ${this.round2(builtInDiscount).toFixed(2)}`, 200, finalY + 16, { align: 'right' });
 
   doc.text(`Subtotal:`, 14, finalY + 22);
@@ -158,17 +158,19 @@ sendWhatsAppBill(sale: Invoice): void {
   message += `*Grand Total: ${sale.grandTotal.toFixed(2)}*\n\n`;
   message += `Payment via *${sale.paymentMode || 'N/A'}*.\nThank you for your purchase!`;
 
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
   let phoneNumber = sale.customer.phone.replace(/\D/g, '');
   if (!phoneNumber.startsWith('91')) {
     phoneNumber = '91' + phoneNumber;
   }
-  
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
   const whatsappUrl = isMobile
     ? `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
     : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
     
-  window.open(whatsappUrl, '_blank');
+  // window.open(whatsappUrl, '_blank');
+window.location.href = whatsappUrl;
+
 }
 
 // Method to toggle profit visibility

@@ -243,7 +243,7 @@
         </table>
 
         <div class="d-flex justify-content-between"><span>Subtotal (MRP):</span> <span class="text-decoration-line-through">&#8377;{{ subTotalMRP() | number:'1.2-2' }}</span></div>
-        <div class="d-flex justify-content-between text-success"><span>Built-in Discount:</span> <span>- &#8377;{{ builtInDiscount() | number:'1.2-2' }}</span></div>
+        <div class="d-flex justify-content-between text-success"><span>Item Discounts:</span> <span>- &#8377;{{ builtInDiscount() | number:'1.2-2' }}</span></div>
         <div class="d-flex justify-content-between"><span>Subtotal (After Item Discount):</span> <span>&#8377;{{ subTotal() | number:'1.2-2' }}</span></div>
         <div class="d-flex justify-content-between text-warning" *ngIf="extraDiscountAmount() > 0">
           <span>Extra Discount:</span> <span>- &#8377;{{ extraDiscountAmount() | number:'1.2-2' }}</span>
