@@ -58,6 +58,7 @@ export class ProductsComponent implements OnInit {
 
   // --- NEW: Search control ---
   public searchControl = new FormControl('');
+public categoryControl = new FormControl('');
 
   // This will now hold the filtered list for the template
   public products$: Observable<Product[]>;
@@ -88,22 +89,38 @@ export class ProductsComponent implements OnInit {
 
   constructor() {
     // --- NEW: Initialize the filtered observable in the constructor ---
-    const searchTerm$ = this.searchControl.valueChanges.pipe(
-      startWith(''), // Emit an initial empty search term
-      debounceTime(300), // Wait for user to stop typing
-      map((term) => term?.toLowerCase() || '')
-    );
+const searchTerm$ = this.searchControl.valueChanges.pipe(
+  startWith(''),
+  debounceTime(200),
+  map(term => term?.toLowerCase() || '')
+);
 
-    this.products$ = combineLatest([
-      this.productsSubject.asObservable(),
-      searchTerm$,
-    ]).pipe(
-      map(([products, term]) => {
-        if (!term) return products;
-        return products.filter((p) => p.name.toLowerCase().includes(term));
-      })
-    );
+const category$ = this.categoryControl.valueChanges.pipe(
+  startWith(''),
+  map(category => category ?? '')
+);
+
+this.products$ = combineLatest([
+  this.productsSubject.asObservable(),
+  searchTerm$,
+  category$
+]).pipe(
+  map(([products, term, category]) => {
+    let filtered = products;
+    if (category) {
+      filtered = filtered.filter(p => (p.category || '') === category);
+    }
+    if (term) {
+      filtered = filtered.filter(p => p.name.toLowerCase().includes(term));
+    }
+    return filtered;
+  })
+);
+
   }
+  // onCategoryChange(): void {
+  //   this.category$.next(this.selectedCategory);
+  // }
 
   async ngOnInit(): Promise<void> {
     this.authService.isAdmin().subscribe((isUserAdmin) => {
@@ -222,7 +239,7 @@ export class ProductsComponent implements OnInit {
     }
   }
 
-   onSellPriceChange(productId: string, event: Event): void {
+  onSellPriceChange(productId: string, event: Event): void {
     const newPrice = Number((event.target as HTMLInputElement).value);
     this.editedPrices.set(productId, newPrice);
   }
@@ -233,18 +250,28 @@ export class ProductsComponent implements OnInit {
 
     this.savingRowId.set(product.id!);
     try {
-      const newMargin = this.calculateMargin(product.costPrice ?? product.rate ?? 0, newPrice);
-      await this.productsService.updateProduct(product.id!, { sellPrice: newPrice, marginPercent: newMargin });
-      
+      const newMargin = this.calculateMargin(
+        product.costPrice ?? product.rate ?? 0,
+        newPrice
+      );
+      await this.productsService.updateProduct(product.id!, {
+        sellPrice: newPrice,
+        marginPercent: newMargin,
+      });
+
       // Update local state
       const currentProducts = this.productsSubject.value;
-      const index = currentProducts.findIndex(p => p.id === product.id!);
+      const index = currentProducts.findIndex((p) => p.id === product.id!);
       if (index > -1) {
-        currentProducts[index] = { ...currentProducts[index], sellPrice: newPrice, marginPercent: newMargin };
+        currentProducts[index] = {
+          ...currentProducts[index],
+          sellPrice: newPrice,
+          marginPercent: newMargin,
+        };
         this.productsSubject.next([...currentProducts]);
         this.productsService.saveToLocal(currentProducts);
       }
-      
+
       this.editedPrices.delete(product.id!);
       this.toast('Price updated!', 'success');
     } catch (error) {

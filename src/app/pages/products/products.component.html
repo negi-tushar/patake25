@@ -4,6 +4,14 @@
     <h2 class="mb-0">Manage Products</h2>
     
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+
+<div class="flex-shrink-0" style="width: 220px; min-width: 160px;">
+  <select class="form-select"
+          [formControl]="categoryControl">
+    <option value="">All Categories</option>
+    <option *ngFor="let category of crackerCategories" [value]="category">{{category}}</option>
+  </select>
+</div>
   <!-- Search Bar -->
   <div class="flex-grow-1">
     <input 
