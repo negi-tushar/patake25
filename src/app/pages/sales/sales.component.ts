@@ -162,14 +162,19 @@ sendWhatsAppBill(sale: Invoice): void {
   if (!phoneNumber.startsWith('91')) {
     phoneNumber = '91' + phoneNumber;
   }
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isTablet = /Android/.test(navigator.userAgent) && !/Mobile/.test(navigator.userAgent);
 
-  const whatsappUrl = isMobile
-    ? `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
-    : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-    
-  // window.open(whatsappUrl, '_blank');
-window.location.href = whatsappUrl;
+const messageUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+
+if (isMobile && !isTablet) {
+  // Likely a phone — try opening the WhatsApp app
+  window.location.href = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+} else {
+  // Tablet or desktop — use the browser version
+  window.open(messageUrl, '_blank');
+}
+
 
 }
 
