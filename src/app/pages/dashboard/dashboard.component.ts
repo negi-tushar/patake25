@@ -48,6 +48,14 @@ export class DashboardComponent implements OnInit {
   allTimeTotalProfit = computed(() => 
     this.allInvoices().reduce((sum, inv) => sum + inv.profitTotalAfterDiscount, 0)
   );
+//   estimatedStockProfit = computed(() => 
+//   this.allProducts().reduce((sum, p) => {
+//     const cost = p.rate ?? p.costPrice ?? 0;
+//     const sell = p.sellPrice ?? 0;
+//     const profit = (sell - cost) * p.quantity;
+//     return sum + profit;
+//   }, 0)
+// );
 
   // === FILTERED METRICS (for the selected date range) ===
   filteredInvoices = computed(() => {
@@ -275,4 +283,5 @@ public get doughnutChartData(): ChartConfiguration<'doughnut'>['data'] {
       borderColor: type === 'sales' ? '#3B82F6' : '#16A34A',
     };
   }
+  
 }

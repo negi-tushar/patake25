@@ -281,10 +281,15 @@ this.products$ = combineLatest([
     }
   }
 
-  calculateMargin(cost: number, sell: number): number {
-    if (cost === 0) return 0;
-    return this.round2(((sell - cost) / cost) * 100);
+// This function correctly calculates MARGIN
+calculateMargin(cost: number, sell: number): number {
+  if (sell === 0) {
+
+    return cost > 0 ? -100 : 0;
   }
+  return this.round2(((sell - cost) / sell) * 100);
+}
+
 
   async refreshFromServer(): Promise<void> {
     const fresh = await firstValueFrom(this.productsService.getProducts());
@@ -514,4 +519,49 @@ this.products$ = combineLatest([
     this.productsSubject.next(list);
     this.productsService.saveToLocal(list);
   }
+
+  // Add this new method to your ProductsComponent class
+
+async exportPriceList(): Promise<void> {
+  // Get the current list of filtered products from the observable
+  const productsToExport = await firstValueFrom(this.products$);
+
+  if (productsToExport.length === 0) {
+    this.toast('No products to export.', 'error');
+    return;
+  }
+
+  // Define the headers for your CSV file
+  const headers = ['Product Name', 'Selling Price'];
+  
+  // Map the product data to an array of arrays, containing only the required fields
+  const data = productsToExport.map(product => [
+    product.name,
+    product.sellPrice ?? 0 // Use 0 if sellPrice is not set
+  ]);
+
+  // Combine headers and data into a single array
+  const csvData = [headers, ...data];
+
+  // Convert the array of arrays into a CSV string
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + csvData.map(e => e.join(",")).join("\n");
+
+  // Create a link element to trigger the download
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  
+  // Set the file name for the download
+  const date = new Date().toISOString().split('T')[0];
+  link.setAttribute("download", `price-list-${date}.csv`);
+  
+  // Append the link to the body, click it, and then remove it
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  this.toast('Price list exported successfully.', 'success');
+}
+
 }

@@ -26,10 +26,10 @@
   <div class="d-flex flex-wrap gap-2">
     <button class="btn btn-primary" (click)="openProductModal()">+ Add Product</button>
 
-    <label class="btn btn-outline-secondary mb-0">
+    <!-- <label class="btn btn-outline-secondary mb-0">
       Import CSV
       <input type="file" accept=".csv" (change)="onCsvSelected($event)" hidden />
-    </label>
+    </label> -->
 
     <button 
       *ngIf="isAdmin()" 
@@ -39,7 +39,9 @@
     >
       Delete Selected ({{ selectedProductIds.size }})
     </button>
-
+<button class="btn btn-outline-success" (click)="exportPriceList()">
+    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export Price List
+  </button>
     <button class="btn btn-outline-secondary" (click)="refreshFromServer()">Refresh</button>
   </div>
 </div>
