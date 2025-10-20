@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
+import { ProfitAnalysisComponent } from './pages/profit-analysis/profit-analysis.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/invoice/invoice.component').then(m => m.NewInvoiceComponent)
   },
+  {
+  path: 'profit-analysis',
+  component: ProfitAnalysisComponent,
+  title: 'Profit Analysis'
+},
   {
     path: 'invoices/edit/:id', // Route for editing an existing invoice
     canActivate: [authGuard],
